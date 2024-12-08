@@ -5,15 +5,15 @@ export const saveGameData = async (req, res, next) => {
   try {
     // getting the game data from the req body
     const { id, fen, winner, timeStamp } = req.body;
-    const { user } = req;
-    const dataExists = await Game.findOne({ id, user });
+    const { userEmail } = req;
+    const dataExists = await Game.findOne({ id, userEmail });
     if (dataExists) {
       dataExists.fen = fen;
       dataExists.winner = winner;
       dataExists.timeStamp = timeStamp;
       await dataExists.save();
     } else {
-      const data = new Game({ id, fen, winner, user, timeStamp });
+      const data = new Game({ id, fen, winner, userEmail, timeStamp });
       await data.save();
     }
     res.status(200).send({ message: 'Game data saved successfully' });
@@ -25,8 +25,8 @@ export const saveGameData = async (req, res, next) => {
 
 export const loadGameData = async (req, res, next) => {
   try {
-    const { user } = req;
-    const gameData = await Game.find({ user });
+    const { userEmail } = req;
+    const gameData = await Game.find({ userEmail });
     if (gameData.length === 0) {
       throw createError.NotFound('User not found');
     }

@@ -50,6 +50,7 @@ The backend provides the following endpoints:
 The Pro Chess backend uses the following main dependencies:
 
 - **Express.js**: Web application framework for Node.js.
+- **Socket.io**: To facilitate easier communication between various clients and server.
 - **Mongoose**: MongoDB object modeling tool.
 - **CORS**: Middleware for handling cross-origin requests.
 - **Http-Errors**: For better error handling throughout appliation.
@@ -68,4 +69,4 @@ The link to the [frontend repo](https://github.com/ashvinck/pro-chess) can be fo
 
 ### New Features coming soon
 
-- Multi-player support
+- End to End encryption support and video call support for chat feature in the app.

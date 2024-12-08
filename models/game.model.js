@@ -4,7 +4,7 @@ const gameDataSchema = new Schema({
   id: String,
   fen: String,
   winner: String,
-  user: String,
+  userEmail: String,
   timeStamp: Date,
 });
 

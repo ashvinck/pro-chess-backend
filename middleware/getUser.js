@@ -9,8 +9,13 @@ export const getUser = (req, res, next) => {
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       throw createError.Unauthorized();
     }
-    const user = authHeader.split(' ')[1];
-    req.user = user;
+    // Splitting the auth header for user details
+    const userDetails = authHeader.split(' ');
+    // Retrieve the user email
+    const userEmail = userDetails[1];
+    // Retrieve the userName
+    // passing userEmail information to the request
+    req.userEmail = userEmail;
     next();
   } catch (error) {
     console.error('Error getting user info', error);
