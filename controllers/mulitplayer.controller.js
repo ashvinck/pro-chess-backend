@@ -16,7 +16,7 @@ const mountCreateRoomEvent = (socket) => {
       await socket.join(roomId);
 
       const { displayName, userPic } = socket?.user;
-      console.log('Inside createRoom', displayName, userPic);
+      // console.log('Inside createRoom', displayName, userPic);
 
       // Create a new room object with the user as the first player
       const newRoom = {
@@ -28,8 +28,8 @@ const mountCreateRoomEvent = (socket) => {
 
       // Store the room information in the Map
       rooms.set(roomId, newRoom);
-      console.log('socketid', socket.id);
-      console.log('ROOMS', rooms);
+      // console.log('socketid', socket.id);
+      // console.log('ROOMS', rooms);
 
       // // Set the user property on the socket
       // socket.user = newRoom.players[0];
@@ -57,7 +57,7 @@ const mountOpponentJoinedRoomEvent = async (socket) => {
       };
 
       const room = rooms.get(roomId);
-      console.log('ROOM when opponent is joining.', room);
+      // console.log('ROOM when opponent is joining.', room);
 
       if (!room) {
         console.error('Room is empty');
@@ -69,7 +69,9 @@ const mountOpponentJoinedRoomEvent = async (socket) => {
         return callback({ error: 'Room is full.' });
       }
       if (room.players.length === 1) {
-        console.log('Pushing player2');
+        // console.log('Pushing player2');
+        room.players.push(newPlayer);
+        // console.log('ROOM when opponent is joined.', room);
         await socket.join(roomId);
       }
 
@@ -146,7 +148,7 @@ const mountOpponentJoinedRoomEvent = async (socket) => {
 const mountOnStartGameEvent = async (socket) => {
   socket.on(GameEventEnum.GAME_START_EVENT, (roomId) => {
     try {
-      console.log('roomId', roomId);
+      // console.log('roomId', roomId);
       const data = {
         roomId: roomId,
         command: 'start-game',
@@ -160,11 +162,11 @@ const mountOnStartGameEvent = async (socket) => {
 
 const mountOnMoveEvent = async (socket) => {
   socket.on(GameEventEnum.MOVE_EVENT, (data) => {
-    console.log('data', data);
+    // console.log('data', data);
     const roomId = data.roomId;
     try {
       socket.to(roomId).emit(GameEventEnum.MOVE_EVENT, data);
-      console.log('This is executed successfully!');
+      // console.log('This is executed successfully!');
     } catch (error) {
       console.error('Error in mountOnMoveEvent:', error.message);
     }
@@ -184,23 +186,21 @@ const mountOnMessageReceivedEvent = async (socket) => {
 };
 
 const mountOnPlayerLeftEvent = async (socket) => {
-  socket.on(GameEventEnum.DISCONNECT_EVENT, () => {
+  socket.on(GameEventEnum.DISCONNECT_EVENT, (roomId) => {
     try {
       const gameRooms = Array.from(rooms.values());
       gameRooms.forEach((room) => {
-        const userInRoom = room.players.find(
-          (player) => player.id === socket.id
-        );
-        console.log('userInRoom', userInRoom);
+        const userInRoom = room.roomId === roomId;
+        // console.log('userInRoom', userInRoom);
         if (userInRoom) {
-          console.log('This is called in 136');
+          // console.log('This is called in 136');
           if (room.players.length < 2) {
             // If there's only one player left in the room, delete the room
             rooms.delete(room.roomId);
           }
-          console.log('rooms123', rooms);
+          // console.log('rooms123', rooms);
           // Notify the remaining player in the room that a player has disconnected
-          console.log('Emitted player left event!');
+          // console.log('Emitted player left event!');
           socket
             .to(room.roomId)
             .emit(GameEventEnum.PLAYER_DISCONNECTED_EVENT, userInRoom);
@@ -244,112 +244,3 @@ export {
   mountOnPlayerLeftEvent,
   mountOnCloseRoomEvent,
 };
-
-// // Event handler for when an opponent joins a game room
-// const mountOpponentJoinedEvent = (socket) => {
-//   socket.on(GameEventEnum.OPPONENT_JOINED_EVENT, (data) => {
-//     try {
-//       // Emit an event to all sockets in the room except the current socket, indicating that an opponent has joined
-//       socket.to(data.roomId).emit(GameEventEnum.OPPONENT_JOINED_EVENT, data);
-//     } catch (error) {
-//       console.error('Error in mountOpponentJoinedEvent:', error.message);
-//     }
-//   });
-// };
-
-// const initializeSocketIO = (io) => {
-//   return io.on('connection', async (socket) => {
-//     try {
-//       // Authenticate the user
-//       const { userName } = socket.request;
-//       console.log(userName);
-
-//       if (!userName) {
-//         // If the user doesn't have a username, deny access
-//         throw createError.Unauthorized();
-//       }
-//       socket.user = { id: socket.id, displayName: userName }; // Set the initial user property
-
-//       // Mount the event handler for a user creating a game room
-//       mountCreateRoomEvent(socket, userName);
-
-//       // Event handler for when a user makes a move in a game room
-//       socket.on(GameEventEnum.MOVE_EVENT, (data) => {
-//         try {
-//           // Emit the move event to all sockets in the specified room
-//           socket.to(data.room).emit(GameEventEnum.MOVE_EVENT, data.move);
-//         } catch (error) {
-//           console.error('Error in MOVE_EVENT:', error.message);
-//         }
-//       });
-
-//       // Event handler for when a user disconnects
-//       socket.on('disconnect', () => {
-//         try {
-//           const gameRooms = Array.from(rooms.values());
-
-//           gameRooms.forEach((room) => {
-//             const userInRoom = room.players.find(
-//               (player) => player.id === socket.id
-//             );
-
-//             if (userInRoom) {
-//               if (room.players.length < 2) {
-//                 // If there's only one player left in the room, delete the room
-//                 rooms.delete(room.roomId);
-//                 return;
-//               }
-
-//               // Notify the remaining player in the room that a player has disconnected
-//               socket
-//                 .to(room.roomId)
-//                 .emit(GameEventEnum.PLAYER_DISCONNECTED_EVENT, userInRoom);
-//             }
-//           });
-//         } catch (error) {
-//           console.error('Error in disconnect event:', error.message);
-//         }
-//       });
-
-//       // Event handler for when a user wants to close a game room
-//       socket.on(GameEventEnum.CLOSE_ROOM_EVENT, async (data) => {
-//         try {
-//           // Notify all sockets in the room that the room is closing
-//           socket.to(data.roomId).emit(GameEventEnum.CLOSE_ROOM_EVENT, data);
-
-//           // Fetch all sockets in the specified room
-//           const clientSockets = await io.in(data.roomId).fetchSockets();
-
-//           // Make each socket in the room leave the room
-//           clientSockets.forEach((s) => {
-//             s.leave(data.roomId);
-//           });
-
-//           // Delete the room information from the Map
-//           rooms.delete(data.roomId);
-//         } catch (error) {
-//           console.error('Error in CLOSE_ROOM_EVENT:', error.message);
-//         }
-//       });
-
-//       // Mount the event handler for when an opponent joins a game room
-//       mountOpponentJoinedEvent(socket);
-//     } catch (error) {
-//       console.error('Socket.io error during connection:', error.message);
-//     }
-//   });
-// };
-
-// // Export the initialized Socket.io logic
-// export { initializeSocketIO };
-
-// // Helper function to handle errors related to game rooms
-// const handleRoomError = (callback, error, message) => {
-//   if (callback) {
-//     // If a callback function is provided, send an error message back to the client
-//     callback({
-//       error,
-//       message,
-//     });
-//   }
-// };
